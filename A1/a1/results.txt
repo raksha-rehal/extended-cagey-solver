@@ -1759,6 +1759,7 @@ Code quality: ?/0.25
 Running time: 2024_02_02-09:52:12
 
 ===========================================
+<<<<<<< HEAD
 test_bne_grid_1 (__main__.TestBinaryGrid.test_bne_grid_1) ... FAIL
 test_bne_grid_2 (__main__.TestBinaryGrid.test_bne_grid_2) ... FAIL
 test_bne_grid_3 (__main__.TestBinaryGrid.test_bne_grid_3) ... FAIL
@@ -11462,3 +11463,5 @@ Code quality: ?/0.25
 Running time: 2024_02_02-13:32:29
 
 ===========================================
+=======
+>>>>>>> 98296761a4d95e5f223ee9737570125d11ba6985

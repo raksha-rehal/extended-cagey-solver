@@ -155,56 +155,79 @@ def prop_GAC(csp, newVar=None):
         """for gac we establish initial GAC by initializing the GAC queue
         with all constaints of the csp"""
         for c in csp.get_all_cons():
-            for var in c.get_scope():
-                svar = c.get_scope().pop(var)
+            vars_with_c = c.get_scope()
+            for var in vars_with_c:
+                svar = vars_with_c.pop(var)
                 queue.append(var,svar)
 
         while len(queue) > 0:
-            c = queue.pop(0)
+            c = queue.pop(-1)
 
-
-            
-            if c.get_n_unasgn() == 1:
-                for i in c.get_scope():
-                    if var.get_assigned_value() == None:
-                        un_ass_val = i
-                        break
-                for i in un_ass_val.cur_domain():
-                    flag = c.check_var_val(un_ass_val,i)
-                    if not flag:
-                       #PRUNE
-                        un_ass_val.prune_value(i)
-                        pruned.append((un_ass_val,i))
-                    if un_ass_val.cur_domain() == []:    
-                        return False, pruned
         return True, pruned
     
     else:
         """for forward checking we forward check all constraints with V
          that have one unassigned variable left"""
-        #For each constraint. 
+        
+        pruned = []
+        queue = []
+
+        # initialize the GAC queue with all constraints containing V.
+        # i.e. fill the queue initially with (x_i, X)
+        # where X is a list of all the other variables connected to x_i via the current constraint
+
+        # add all of these^ to the queue for each constraint that x_i is involved with.
+
+        # for each constraint involving newVar. 
         for c in csp.get_cons_with_var(newVar):
-            #If it has exactly 1 unassigned variable. 
-            if c.get_n_unasgn() == 1:
-                #Init Values
- 
-                #Get all variables within the constraint. 
-                vars = c.get_scope()
-                #For each var, if its unassigned, save for later.
-                for var in vars:
-                    if var.get_assigned_value() == None:
-                        un_ass_val = var
-                        break
-                    
-                #Test each value out, If it ever returns false, prune it from the old tree. 
-                for i in un_ass_val.cur_domain():
-                    flag = c.check_var_val(un_ass_val,i)
-                    if not flag:
-                       #PRUNE
-                        un_ass_val.prune_value(i)
-                        pruned.append((un_ass_val,i))
-                      
-                if un_ass_val.cur_domain() == []:    
-                    return False, pruned
+            # get the other variables involved in this constraint with newVar
+            vars_with_c = c.get_scope()
+            
+            for var in vars_with_c:
+                # remove x_i and leave its connected variables (X) in the list svar
+                svar = vars_with_c.remove(var)
+
+                # append (x_i, X) to the queue
+                queue.append(var,svar)
+            
+        # now we will check each arc.
+        while len(queue) > 0:
+
+            # check the consistencies of the arcs starting from the tail of the queue.
+            # this is in the form [x_i, [X]]
+            current = queue.pop(-1)
+
+            # this will return T or F...
+            if remove_inconsistencies(current):  # ...if at least one thing was removed
+
+                # if a value was removed from x_i's domain, we want to add all the neighbours 
+                # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
+                # the variables connected to x_k via (all of?) x_k's contraints.
+
+                # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
+                # way of (x_k, X)
+                
+                for neighbour in current[1]:
+                    # remove x_k and leave X behind
+                    remaining = current.remove(neighbour)
+
+                    # append (x_k, X) to the queue
+                    queue.append(neighbour,remaining)
+            
+        # when would we reach a dead end? and what do we prune at that point?
         return True, pruned
     
+def remove_inconsistencies(var_and_consVars):
+
+    # vars_and_consVars is in the form: [x_i, [X]]
+    # where x_i and X are connected via a certain constraint...
+
+    # this function will iterate through each value in x_i's domain
+    # and check that (val, Y) is 
+
+    for val in var_and_consVars[0].cur_domain():
+        inc = 0
+
+        for val1 in var_and_consVars[1][inc]:
+            flag = None
+
