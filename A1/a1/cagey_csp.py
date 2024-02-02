@@ -118,7 +118,7 @@ def binary_ne_grid(cagey_grid):
             y = []
             for x in combinations(range(1,n+1),2):
                 y.append(x)
-            
+            print(y)
             cons.add_satisfying_tuples([y]) 
             csp.add_constraint(cons)
         i += n
