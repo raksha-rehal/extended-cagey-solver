@@ -92,12 +92,17 @@ def binary_ne_grid(cagey_grid):
     cages = cagey_grid[1]
     csp = CSP("Cagey")
     allvars = []
+
     #Add Variables
     for i in range(1,n+1):
         for j in range(1,n+1):
-            new_var = Variable("Cell("+i+","+j+")", list(range(1,n+1)))
+            new_var = Variable("Cell("+str(i)+","+str(j)+")", list(range(1,n+1)))
             allvars.append(new_var)
             csp.add_var(new_var)
+            
+    
+        
+
 
     #Row Constraints
     row = []
@@ -106,26 +111,34 @@ def binary_ne_grid(cagey_grid):
     while i < n*n:
         for j in range(n):
             row.append(allvars[i + j])
-        ober = combinations(row,2) 
+        ober = permutations(row,2) 
         for q in ober:
+            print(q)
             cons = Constraint(2,q)
-            for x in permutations(range(n),2):
-                cons.add_satisfying_tuples(x) 
+            y = []
+            for x in combinations(range(1,n+1),2):
+                y.append(x)
+            
+            cons.add_satisfying_tuples([y]) 
             csp.add_constraint(cons)
         i += n
+    
     #Column Constraints
     i = 0
     for j in range(n):
         while i < n*n:
             column.append(allvars[i + j])
             i += n
+
         ober = combinations(column,2) 
         for q in ober:
             cons = Constraint("Name",q)
             for x in permutations(range(1,n+1),2):
                 cons.add_satisfying_tuples(i) 
             csp.add_constraint(cons)
+
         i += 1
+
         
     return csp, allvars
 #LOOK OVER ALL THIS CODE LOL TOO TIRED> 
@@ -171,8 +184,7 @@ def nary_ad_grid(cagey_grid):
         csp.add_constraint(cons)
 
         
-    return csp, 
-    pass
+    return csp,  allvars
 
 def cagey_csp_model(cagey_grid):
     ##IMPLEMENT
