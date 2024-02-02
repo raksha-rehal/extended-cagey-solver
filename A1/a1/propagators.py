@@ -130,7 +130,7 @@ def prop_FC(csp, newVar=None):
                     if var.get_assigned_value() == None:
                         un_ass_val = var
                         break
-                    
+
                 #Test each value out, If it ever returns false, prune it from the old tree. 
                 for i in un_ass_val.cur_domain():
                     flag = c.check_var_val(un_ass_val,i)
@@ -149,4 +149,62 @@ def prop_GAC(csp, newVar=None):
        processing all constraints. Otherwise we do GAC enforce with
        constraints containing newVar on GAC Queue'''
     #IMPLEMENT
-    pass
+    pruned = []
+    queue = []
+    if not newVar:
+        """for gac we establish initial GAC by initializing the GAC queue
+        with all constaints of the csp"""
+        for c in csp.get_all_cons():
+            for var in c.get_scope():
+                svar = c.get_scope().pop(var)
+                queue.append(var,svar)
+
+        while len(queue) > 0:
+            c = queue.pop(0)
+
+
+            
+            if c.get_n_unasgn() == 1:
+                for i in c.get_scope():
+                    if var.get_assigned_value() == None:
+                        un_ass_val = i
+                        break
+                for i in un_ass_val.cur_domain():
+                    flag = c.check_var_val(un_ass_val,i)
+                    if not flag:
+                       #PRUNE
+                        un_ass_val.prune_value(i)
+                        pruned.append((un_ass_val,i))
+                    if un_ass_val.cur_domain() == []:    
+                        return False, pruned
+        return True, pruned
+    
+    else:
+        """for forward checking we forward check all constraints with V
+         that have one unassigned variable left"""
+        #For each constraint. 
+        for c in csp.get_cons_with_var(newVar):
+            #If it has exactly 1 unassigned variable. 
+            if c.get_n_unasgn() == 1:
+                #Init Values
+ 
+                #Get all variables within the constraint. 
+                vars = c.get_scope()
+                #For each var, if its unassigned, save for later.
+                for var in vars:
+                    if var.get_assigned_value() == None:
+                        un_ass_val = var
+                        break
+                    
+                #Test each value out, If it ever returns false, prune it from the old tree. 
+                for i in un_ass_val.cur_domain():
+                    flag = c.check_var_val(un_ass_val,i)
+                    if not flag:
+                       #PRUNE
+                        un_ass_val.prune_value(i)
+                        pruned.append((un_ass_val,i))
+                      
+                if un_ass_val.cur_domain() == []:    
+                    return False, pruned
+        return True, pruned
+    

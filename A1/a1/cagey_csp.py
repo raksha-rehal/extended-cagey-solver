@@ -1,7 +1,7 @@
 # =============================
-# Student Names:
-# Group ID:
-# Date:
+# Student Names: Raksha Rehal & Nicholas Tillo  
+# Group ID: 62
+# Date: 2024 - 02 - 01
 # =============================
 # CISC 352 - W23
 # cagey_csp.py
@@ -84,14 +84,94 @@ An example of a 3x3 puzzle would be defined as:
 '''
 
 from cspbase import *
+from itertools import *
 
 def binary_ne_grid(cagey_grid):
     ##IMPLEMENT
-    pass
+    n = cagey_grid[0]
+    cages = cagey_grid[1]
+    csp = CSP("Cagey")
+    allvars = []
+    #Add Variables
+    for i in range(1,n+1):
+        for j in range(1,n+1):
+            new_var = Variable("Cell("+i+","+j+")", list(range(1,n+1)))
+            allvars.append(new_var)
+            csp.add_var(new_var)
 
+    #Row Constraints
+    row = []
+    column = []
+    i = 0
+    while i < n*n:
+        for j in range(n):
+            row.append(allvars[i + j])
+        ober = combinations(row,2) 
+        for q in ober:
+            cons = Constraint(2,q)
+            for x in permutations(range(n),2):
+                cons.add_satisfying_tuples(x) 
+            csp.add_constraint(cons)
+        i += n
+    #Column Constraints
+    i = 0
+    for j in range(n):
+        while i < n*n:
+            column.append(allvars[i + j])
+            i += n
+        ober = combinations(column,2) 
+        for q in ober:
+            cons = Constraint("Name",q)
+            for x in permutations(range(1,n+1),2):
+                cons.add_satisfying_tuples(i) 
+            csp.add_constraint(cons)
+        i += 1
+        
+    return csp, allvars
+#LOOK OVER ALL THIS CODE LOL TOO TIRED> 
 
 def nary_ad_grid(cagey_grid):
     ## IMPLEMENT
+    n = cagey_grid[0]
+    cages = cagey_grid[1]
+    csp = CSP("Cagey")
+    allvars = []
+    #Add Variables
+    for i in range(1,n+1):
+        for j in range(1,n+1):
+            new_var = Variable("Cell("+i+","+j+")", list(range(1,n+1)))
+            allvars.append(new_var)
+            csp.add_var(new_var)
+    
+    
+    #Row Constraints
+    row = []
+    column = []
+    i = 0
+    while i < n*n:
+        for j in range(n):
+            row.append(allvars[i + j])
+
+        cons = Constraint("Name",row)
+        for x in permutations(range(1,n + 1),n):
+            cons.add_satisfying_tuples(x) 
+        csp.add_constraint(cons)
+
+        i += n
+    #Column Constraints
+    i = 0
+    for j in range(1,n+1):
+        while i < n*n:
+            column.append(allvars[i + j])
+            i += n
+
+        cons = Constraint(2,column)
+        for x in permutations(range(1,n+1),n):
+            cons.add_satisfying_tuples(i) 
+        csp.add_constraint(cons)
+
+        
+    return csp, 
     pass
 
 def cagey_csp_model(cagey_grid):
