@@ -127,17 +127,17 @@ def prop_FC(csp, newVar=None):
                 vars = c.get_scope()
                 #For each var, if its unassigned, save for later.
                 for var in vars:
-                    if var.get_assigned_value == None:
+                    if var.get_assigned_value() == None:
                         un_ass_val = var
                         break
                     
                     
                 #Test each value out, If it ever returns false, prune it from the old tree. 
                 for i in un_ass_val.cur_domain():
-                    flag = c.check_val_var((un_ass_val,i))
+                    flag = c.check_var_val((un_ass_val,i))
                     if not flag:
                        #PRUNE
-                        un_ass_val.prune(i)
+                        un_ass_val.prune_value(i)
                         pruned.append((un_ass_val,i))
                       
                 if un_ass_val.cur_domain() == []:    
