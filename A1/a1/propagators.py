@@ -101,14 +101,14 @@ def prop_FC(csp, newVar=None):
         for c in csp.get_all_cons():
             if c.get_n_unasgn() == 1:
                 for i in c.get_scope():
-                    if var.get_assigned_value == None:
+                    if var.get_assigned_value() == None:
                         un_ass_val = i
                         break
                 for i in un_ass_val.cur_domain():
-                    flag = c.check_val_var((un_ass_val,i))
+                    flag = c.check_var_val((un_ass_val,i))
                     if not flag:
                        #PRUNE
-                        un_ass_val.prune(i)
+                        un_ass_val.prune_value(i)
                         pruned.append((un_ass_val,i))
                     if un_ass_val.cur_domain() == []:    
                         return False, pruned
