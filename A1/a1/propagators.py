@@ -105,7 +105,7 @@ def prop_FC(csp, newVar=None):
                         un_ass_val = i
                         break
                 for i in un_ass_val.cur_domain():
-                    flag = c.check_var_val((un_ass_val,i))
+                    flag = c.check_var_val(un_ass_val,i)
                     if not flag:
                        #PRUNE
                         un_ass_val.prune_value(i)
@@ -131,10 +131,9 @@ def prop_FC(csp, newVar=None):
                         un_ass_val = var
                         break
                     
-                    
                 #Test each value out, If it ever returns false, prune it from the old tree. 
                 for i in un_ass_val.cur_domain():
-                    flag = c.check_var_val((un_ass_val,i))
+                    flag = c.check_var_val(un_ass_val,i)
                     if not flag:
                        #PRUNE
                         un_ass_val.prune_value(i)
