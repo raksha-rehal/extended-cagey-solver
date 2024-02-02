@@ -33,7 +33,7 @@ def ord_dh(csp):
     return_var = None
     largest = 0
 
-    for var in all_vars():
+    for var in all_vars:
         var_constraints = csp.get_cons_with_var(var)
         temp = 0
 
@@ -52,10 +52,10 @@ def ord_dh(csp):
 def ord_mrv(csp):
     ''' return variable according to the Minimum Remaining Values heuristic '''
     all_vars =  csp.get_all_unasgn_vars()
-    min = all_vars[0].cur_domain_size
+    min = all_vars[0].cur_domain_size()
     return_var = None
 
-    for var in all_vars():
+    for var in all_vars:
         temp = var.cur_domain_size()
 
         if temp <= min:
