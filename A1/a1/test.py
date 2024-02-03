@@ -1,11 +1,5 @@
 from itertools import permutations
 
-print("start")
+print([tuple([5,4,3,1,2,1])])
 
-perms = permutations(range(1,4), 3)
-
-for perm in perms:
-    print(perm)
-    
-for perm in perms:
-    print(type(perms))
+[[1,2,3,4],[1,2,3,4,4],[1,2,3,4]]

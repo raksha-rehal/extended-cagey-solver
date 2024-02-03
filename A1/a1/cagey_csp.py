@@ -168,24 +168,147 @@ def nary_ad_grid(cagey_grid):
     
     #Column Constraints
     for j in range(n):
-        print(j)
         column = []
         i = 0
         while i < n*n:
-            print("i: "+ str(i) + "j: " + str(j))
-
             column.append(allvars[i + j])
             i += n
 
         cons = Constraint("2",column)
         cons.add_satisfying_tuples(y) 
         csp.add_constraint(cons)
-
-    print("S")
-
-    print(csp.get_all_cons())
     return csp,  allvars
 
 def cagey_csp_model(cagey_grid):
-    ##IMPLEMENT
-    pass
+    ## IMPLEMENT
+    n = cagey_grid[0]
+    cages = cagey_grid[1]
+    csp = CSP("Cagey")
+    allvars = []
+    #Add Variables
+    for i in range(1,n+1):
+        for j in range(1,n+1):
+            new_var = Variable("Cell("+str(i)+","+str(j)+")", list(range(1,n+1)))
+            allvars.append(new_var)
+            csp.add_var(new_var)
+
+    
+    #INNIT CONSTRAINTS
+    y = []
+    for x in permutations(range(1,n + 1),n):
+        y.append(x)
+    #Row Constraints
+    i = 0
+    while i < n*n:
+        row = []
+        for j in range(n):
+            row.append(allvars[i + j])
+        cons = Constraint("Name",row)
+        cons.add_satisfying_tuples(y) 
+        csp.add_constraint(cons)
+        i += n
+    
+    #Column Constraints
+    for j in range(n):
+        column = []
+        i = 0
+        while i < n*n:
+            column.append(allvars[i + j])
+            i += n
+
+        cons = Constraint("2",column)
+        cons.add_satisfying_tuples(y) 
+        csp.add_constraint(cons)
+        #Cage Constraints
+    for i in cages:
+        total = i[0]
+        surrounded_boxes = i[1]
+        opperator = i[2]
+
+        needed_vars = []
+        for k in surrounded_boxes:
+            for y in allvars:
+                if y.name == "Cell("+str(k[0])+","+str(k[1])+")":
+                    needed_vars.append(y)
+
+        
+        new_var = Variable("Cage_op("+str(total)+":"+str(opperator)+":"+str(needed_vars)+")")
+        csp.add_var(new_var)
+        allvars.append(new_var)
+        cons_vars = needed_vars[:]
+        cons_vars.append(new_var)
+        cage_cons = Constraint("2",cons_vars)
+
+        num_in_cage = len(needed_vars)
+        domain_sizer = allvars[0].domain_size()
+        all_possible_combos = [[]]
+        for i in range(num_in_cage):
+            temp = []
+            for j in all_possible_combos:
+                for k in range(1,domain_sizer+1):
+                    s = j[:]
+                    s.append(k)
+                    temp.append(s)
+            all_possible_combos = temp[:]
+        
+        #Turn combos into tuples so that they canbe used. 
+        for i in range(len(all_possible_combos)):
+            all_possible_combos[i].insert(0,opperator)
+            all_possible_combos[i] = tuple(all_possible_combos[i])
+
+
+
+        final = []
+        if opperator == "+" or opperator == "*": 
+            print("Case 1")
+            for combo in all_possible_combos:
+            #for i in combinations(range(1,domain_sizer + 1),num_in_cage):
+            #    print(i)
+                if calculate_associative(opperator,combo,total):
+                    final.append(combo)
+        else:    
+            print("Case 2")
+            #for i in permutations(range(1,domain_sizer + 1),num_in_cage):
+            for combo in all_possible_combos:
+                if calculate_non_associative(opperator,combo,total):
+                    final.append(i)
+        print(final)
+
+        cage_cons.add_satisfying_tuples(final)
+        csp.add_constraint(cage_cons)
+
+    return csp,  allvars
+
+def calculate_associative(opperator, tuples, goal):
+    total = 0
+    if opperator == "+":
+        for i in tuples[1:]:
+            total += i
+        if total == goal:
+            return True
+    elif opperator == "*":
+        for i in tuples[1:]:
+            total *= i
+        if total == goal:
+            return True
+    return False
+def calculate_non_associative(opperator, tuples, goal):
+    total = tuples[1]
+
+    if opperator == "-":
+        for i in tuples[2:]:
+            total -= i
+        if total == goal:
+            return True
+    
+    elif opperator == "/":
+        for i in tuples[2:]:
+            total /= i
+        if total == goal:
+            return True
+
+    else:
+        return calculate_non_associative("/",tuples,goal) or calculate_non_associative("-",tuples,goal) or calculate_associative("+",tuples,goal) or calculate_associative("*",tuples,goal)
+
+    return False
+
