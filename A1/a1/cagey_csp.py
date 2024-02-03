@@ -251,60 +251,58 @@ def cagey_csp_model(cagey_grid):
                     temp.append(s)
             all_possible_combos = temp[:]
         
-        #Turn combos into tuples so that they canbe used. 
+        #Turn combos into tuples so that they can be used. 
         for i in range(len(all_possible_combos)):
-            all_possible_combos[i].insert(0,opperator)
+            all_possible_combos[i].append(opperator)
             all_possible_combos[i] = tuple(all_possible_combos[i])
-
-
 
         final = []
         if opperator == "+" or opperator == "*": 
             print("Case 1")
             for combo in all_possible_combos:
-            #for i in combinations(range(1,domain_sizer + 1),num_in_cage):
-            #    print(i)
                 if calculate_associative(opperator,combo,total):
                     final.append(combo)
         else:    
             print("Case 2")
-            #for i in permutations(range(1,domain_sizer + 1),num_in_cage):
             for combo in all_possible_combos:
                 if calculate_non_associative(opperator,combo,total):
                     final.append(i)
+
         print(final)
 
         cage_cons.add_satisfying_tuples(final)
         csp.add_constraint(cage_cons)
 
-    return csp,  allvars
+    return csp, allvars
 
 def calculate_associative(opperator, tuples, goal):
-    total = 0
+    total = tuples[0]
+
     if opperator == "+":
-        for i in tuples[1:]:
+        for i in tuples[1:-1]:
             total += i
         if total == goal:
             return True
     elif opperator == "*":
-        for i in tuples[1:]:
+        for i in tuples[1:-1]:
             total *= i
         if total == goal:
             return True
     return False
-def calculate_non_associative(opperator, tuples, goal):
-    total = tuples[1]
 
+def calculate_non_associative(opperator, tuples, goal):
+    total = tuples[0]
     if opperator == "-":
-        for i in tuples[2:]:
+        for i in tuples[1:-1]:
             total -= i
         if total == goal:
             return True
     
     elif opperator == "/":
-        for i in tuples[2:]:
+        for i in tuples[1:-1]:
             total /= i
-        if total == goal:
+        
+        if int(total) == goal:
             return True
 
     else:
