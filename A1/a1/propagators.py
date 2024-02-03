@@ -158,8 +158,6 @@ def prop_GAC(csp, newVar=None):
         with all constaints of the csp"""
         
         queue = csp.get_all_cons()[:]
-
-        print("meow")
         
         while len(queue) > 0:
             # check the consistencies of the arcs starting from the tail of the queue.
@@ -171,17 +169,12 @@ def prop_GAC(csp, newVar=None):
 
             # build the arc
             for var in vars_with_c:
-                print(var)
-                print(len(queue))
 
                 if var.cur_domain() == []:
                     return False, pruned
 
                 for i in var.cur_domain():
                     flag = current.check_var_val(var,i)
-                    """print(var.cur_domain())
-                    print(i)
-                    print(flag)"""
 
                     if not flag:
                         #PRUNE
@@ -218,18 +211,12 @@ def prop_GAC(csp, newVar=None):
 
             # build the arc
             for var in vars_with_c:
-                print(var)
-                print(len(queue))
 
                 if var.cur_domain() == []:
                     return False, pruned
 
                 for i in var.cur_domain():
                     flag = current.check_var_val(var,i)
-                    """print(var.cur_domain())
-                    print(i)
-                    print(flag)"""
-
                     if not flag:
                         #PRUNE
                         var.prune_value(i)
