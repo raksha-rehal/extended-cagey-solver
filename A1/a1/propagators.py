@@ -12,6 +12,8 @@
 #Look for #IMPLEMENT tags in this file. These tags indicate what has
 #to be implemented to complete problem solution.
 
+from itertools import permutations
+
 '''This file will contain different constraint propagators to be used within
    bt_search.
 
@@ -150,84 +152,101 @@ def prop_GAC(csp, newVar=None):
        constraints containing newVar on GAC Queue'''
     #IMPLEMENT
     pruned = []
-    queue = []
+
     if not newVar:
         """for gac we establish initial GAC by initializing the GAC queue
         with all constaints of the csp"""
-        for c in csp.get_all_cons():
-            vars_with_c = c.get_scope()
-            for var in vars_with_c:
-                svar = vars_with_c.pop(var)
-                queue.append(var,svar)
+        
+        queue = csp.get_all_cons()[:]
 
+        print("meow")
+        
         while len(queue) > 0:
-            c = queue.pop(-1)
+            # check the consistencies of the arcs starting from the tail of the queue.
+            # this is in the form [x_i, [X]]
+            
+            # current is a constraint
+            current = queue.pop(0)
+            vars_with_c = current.get_scope()
 
+            # build the arc
+            for var in vars_with_c:
+                print(var)
+                print(len(queue))
+
+                if var.cur_domain() == []:
+                    return False, pruned
+
+                for i in var.cur_domain():
+                    flag = current.check_var_val(var,i)
+                    """print(var.cur_domain())
+                    print(i)
+                    print(flag)"""
+
+                    if not flag:
+                        #PRUNE
+                        var.prune_value(i)
+                        pruned.append((var,i))
+
+                        # if a value was removed from x_i's domain, we want to add all the neighbours 
+                        # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
+                        # the variables connected to x_k via (all of?) x_k's contraints.
+
+                        # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
+                        # way of (x_k, X)
+                            
+                        temp = vars_with_c[:]
+                        temp.remove(var)
+
+                        for neighbour in temp:
+                            queue.extend(csp.get_cons_with_var(neighbour))
+                
         return True, pruned
     
     else:
-        """for forward checking we forward check all constraints with V
-         that have one unassigned variable left"""
+        """for gac we initialize the GAC queue with all constraints containing V."""
+
+        queue = csp.get_cons_with_var(newVar)[:]
         
-        pruned = []
-        queue = []
-
-        # initialize the GAC queue with all constraints containing V.
-        # i.e. fill the queue initially with (x_i, X)
-        # where X is a list of all the other variables connected to x_i via the current constraint
-
-        # add all of these^ to the queue for each constraint that x_i is involved with.
-
-        # for each constraint involving newVar. 
-        for c in csp.get_cons_with_var(newVar):
-            # get the other variables involved in this constraint with newVar
-            vars_with_c = c.get_scope()
-            
-            for var in vars_with_c:
-                # remove x_i and leave its connected variables (X) in the list svar
-                svar = vars_with_c.remove(var)
-
-                # append (x_i, X) to the queue
-                queue.append(var,svar)
-            
-        # now we will check each arc.
         while len(queue) > 0:
-
             # check the consistencies of the arcs starting from the tail of the queue.
             # this is in the form [x_i, [X]]
-            current = queue.pop(-1)
-
-            # this will return T or F...
-            if remove_inconsistencies(current):  # ...if at least one thing was removed
-
-                # if a value was removed from x_i's domain, we want to add all the neighbours 
-                # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
-                # the variables connected to x_k via (all of?) x_k's contraints.
-
-                # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
-                # way of (x_k, X)
-                
-                for neighbour in current[1]:
-                    # remove x_k and leave X behind
-                    remaining = current.remove(neighbour)
-
-                    # append (x_k, X) to the queue
-                    queue.append(neighbour,remaining)
             
-        # when would we reach a dead end? and what do we prune at that point?
+            # current is a constraint
+            current = queue.pop(0)
+            vars_with_c = current.get_scope()
+
+            # build the arc
+            for var in vars_with_c:
+                print(var)
+                print(len(queue))
+
+                if var.cur_domain() == []:
+                    return False, pruned
+
+                for i in var.cur_domain():
+                    flag = current.check_var_val(var,i)
+                    """print(var.cur_domain())
+                    print(i)
+                    print(flag)"""
+
+                    if not flag:
+                        #PRUNE
+                        var.prune_value(i)
+                        pruned.append((var,i))
+
+                        # if a value was removed from x_i's domain, we want to add all the neighbours 
+                        # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
+                        # the variables connected to x_k via (all of?) x_k's contraints.
+
+                        # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
+                        # way of (x_k, X)
+                            
+                        temp = vars_with_c[:]
+                        temp.remove(var)
+
+                        for neighbour in temp:
+                            queue.extend(csp.get_cons_with_var(neighbour))
+                
         return True, pruned
-    
-def remove_inconsistencies(var_and_consVars):
-
-    # vars_and_consVars is in the form: [x_i, [X]]
-    # where x_i and X are connected via a certain constraint...
-
-    # this function will iterate through each value in x_i's domain
-    # and check that (val, Y) is 
-
-    for val in var_and_consVars[0].cur_domain():
-        inc = 0
-
-        for val1 in var_and_consVars[1][inc]:
-            flag = None
 
