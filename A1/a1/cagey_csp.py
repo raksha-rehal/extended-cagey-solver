@@ -232,7 +232,7 @@ def cagey_csp_model(cagey_grid):
                     needed_vars.append(y)
 
         
-        new_var = Variable("Cage_op("+str(total)+":"+str(opperator)+":"+str(needed_vars)+")")
+        new_var = Variable("Cage_op("+str(total)+":"+str(opperator)+":"+str(needed_vars)+")", ['+','-','/','*','?'])
         csp.add_var(new_var)
         allvars.append(new_var)
         cons_vars = needed_vars[:]
