@@ -5,7 +5,8 @@
 # =============================
 # CISC 352 - W23
 # cagey_csp.py
-# desc:
+# desc: implementations of the extended cagey game in a variety of 
+# constraint formats, represented as a csp in each case.
 #
 
 #Look for #IMPLEMENT tags in this file.
@@ -87,188 +88,282 @@ from cspbase import *
 from itertools import *
 
 def binary_ne_grid(cagey_grid):
-    ##IMPLEMENT
+    """A model of a Cagey grid (without cage constraints) built using only
+        binary not-equal constraints for both the row and column constraints."""
+
+    # extract num of rows, cols.
     n = cagey_grid[0]
     cages = cagey_grid[1]
-    csp = CSP("Cagey")
+
+    # begin initializing the csp.
+    csp = CSP("Cagey: Binary Not-Equal Constraints")
     allvars = []
 
-    #Add Variables
+    # the variables are represented in this problem as each individual cell
+    # of the cagey grid. hence, we will add them to our list of variables,
+    # and they will be represented with names in the form "Cell(i,j)".
+    #
+    # their permanent domains will span from 1-n.
     for i in range(1,n+1):
         for j in range(1,n+1):
             new_var = Variable("Cell("+str(i)+","+str(j)+")", list(range(1,n+1)))
             allvars.append(new_var)
             csp.add_var(new_var)
     
+    # the constraints will make use of an itertools method "permutations"
+    # that will allow us to define every possible assignment that a variable
+    # within this csp could have.
+    #
+    # as the perma-domain for any var is 1-n, a representation of cagey
+    # (without cages right now) with binary constraints would constitute
+    # of constraints with a scope of only two variables. hence, all
+    # tuples satifying this constraint would be a binary permutation of
+    # these n numbers for any given constraint.
+    #
+    allowed = []
+    for valid_assignment in permutations(range(1,n+1),2):
+        allowed.append(valid_assignment)
 
-    #INNIT CONSTRAINTS
-    y = []
-    for x in permutations(range(1,n+1),2):
-        y.append(x)
-    #Row Constraints
-    
+    # building the specific constraints row-wise.
     i = 0
     while i < n*n:
         row = []
+
+        # appending the variables that belong in each row...
+        #
+        # e.g. if n = 3, our first row will contain variables named
+        # ["Cell(1,1)", "Cell(1,2)", "Cell(1,3)"].
         for j in range(n):
             row.append(allvars[i + j])
-        ober = combinations(row,2) 
-        for q in ober:
-            cons = Constraint("Cons",q)
-            cons.add_satisfying_tuples(y) 
+
+        # sets up a constraint object between every two variables
+        # in each row.
+        all_row_cons = combinations(row,2) 
+
+        for c in all_row_cons:
+            cons_name = "Constraint for " + str(c)
+            cons = Constraint(cons_name,c)
+            cons.add_satisfying_tuples(allowed) 
             csp.add_constraint(cons)
-        
+
         i += n
-    #Column Constraints
-    
+
+    # building the specific constraints column-wise.
     for j in range(n):
         column = []
+
+        # appending the variables that belong in each column...
+        #
+        # e.g. if n = 3, our first column will contain variables named
+        # ["Cell(1,1)", "Cell(2,1)", "Cell(3,1)"].
         i = 0
         while i < n*n:
             column.append(allvars[i + j])
             i += n
-        ober2 = combinations(column,2)
-        for q in ober2:
-            cons = Constraint("Name",q)
-            cons.add_satisfying_tuples(y) 
+
+        all_col_cons = combinations(column,2)
+        for c in all_col_cons:
+            cons_name = "Constraint for " + str(c)
+            cons = Constraint(cons_name,c)
+            cons.add_satisfying_tuples(allowed) 
             csp.add_constraint(cons)
     
     return csp, allvars
 
-#LOOK OVER ALL THIS CODE LOL TOO TIRED> 
 
 def nary_ad_grid(cagey_grid):
-    ## IMPLEMENT
+    """A model of a Cagey grid (without cage constraints) built using only n-ary
+      all-different constraints for both the row and column constraints."""
+    
+    # initialization of the csp.
     n = cagey_grid[0]
     cages = cagey_grid[1]
-    csp = CSP("Cagey")
+
+    csp = CSP("Cagey: n-ary \"alldiff\" Constraints")
     allvars = []
-    #Add Variables
+    
+    # initialize the variables, i.e. each cell of the grid.
     for i in range(1,n+1):
         for j in range(1,n+1):
             new_var = Variable("Cell("+str(i)+","+str(j)+")", list(range(1,n+1)))
             allvars.append(new_var)
             csp.add_var(new_var)
 
+    # initialize all the constraints.
     
-    #INNIT CONSTRAINTS
-    y = []
-    for x in permutations(range(1,n + 1),n):
-        y.append(x)
-    #Row Constraints
+    # specify the allowed tuples, which in this case, is every 
+    # possible way that n values can be represented amongst
+    # the n present variables in each row/column.
+    allowed = []
+    for valid_assignment in permutations(range(1,n + 1), n):
+        allowed.append(valid_assignment)
+
+    # building the specific constraints row-wise.
     i = 0
     while i < n*n:
         row = []
+
         for j in range(n):
             row.append(allvars[i + j])
-        cons = Constraint("Name",row)
-        cons.add_satisfying_tuples(y) 
+            
+        cons_name = "Constraint for " + str(row)
+        cons = Constraint(cons_name, row)
+        cons.add_satisfying_tuples(allowed) 
         csp.add_constraint(cons)
+
+        # step n times to get to the next row.
         i += n
     
-    #Column Constraints
+    # building the specific constraints column-wise.
     for j in range(n):
         column = []
+
         i = 0
         while i < n*n:
             column.append(allvars[i + j])
+
+            # step n times to get to the next column.
             i += n
 
-        cons = Constraint("2",column)
-        cons.add_satisfying_tuples(y) 
+        cons_name = "Constraint for " + str(column)
+        cons = Constraint(cons_name, column)
+        cons.add_satisfying_tuples(allowed) 
         csp.add_constraint(cons)
-    return csp,  allvars
+
+    return csp, allvars
+
 
 def cagey_csp_model(cagey_grid):
-    ## IMPLEMENT
+    """a model of a Cagey grid built using n-ary all-different constraints 
+      for the grid, together with Cagey cage constraints."""
+
+    # initialization.
     n = cagey_grid[0]
     cages = cagey_grid[1]
-    csp = CSP("Cagey")
+
+    csp = CSP("Extended Cagey with n-ary \"alldiff\" Constraints")
     allvars = []
-    #Add Variables
+
+    # initialize the variables, i.e. each cell of the grid.
     for i in range(1,n+1):
         for j in range(1,n+1):
             new_var = Variable("Cell("+str(i)+","+str(j)+")", list(range(1,n+1)))
             allvars.append(new_var)
             csp.add_var(new_var)
-
     
-    #INNIT CONSTRAINTS
-    y = []
-    for x in permutations(range(1,n + 1),n):
-        y.append(x)
-    #Row Constraints
+    # initialize all the constraints.
+    
+    # specify the allowed tuples according to n-ary alldiff rules.
+    allowed = []
+    for valid_assignment in permutations(range(1,n + 1),n):
+        allowed.append(valid_assignment)
+
+    # building the specific constraints row-wise.
     i = 0
     while i < n*n:
         row = []
+
         for j in range(n):
             row.append(allvars[i + j])
-        cons = Constraint("Name",row)
-        cons.add_satisfying_tuples(y) 
+
+        cons_name = "Constraint for " + str(row)
+        cons = Constraint(cons_name, row)
+        cons.add_satisfying_tuples(allowed) 
         csp.add_constraint(cons)
+
         i += n
     
-    #Column Constraints
+    # building the specific constraints column-wise.
     for j in range(n):
         column = []
+
         i = 0
         while i < n*n:
             column.append(allvars[i + j])
             i += n
 
-        cons = Constraint("2",column)
-        cons.add_satisfying_tuples(y) 
+        cons_name = "Constraint for " + str(column)
+        cons = Constraint(cons_name, column)
+        cons.add_satisfying_tuples(allowed) 
         csp.add_constraint(cons)
-        #Cage Constraints
-    for i in cages:
-        total = i[0]
-        surrounded_boxes = i[1]
-        opperator = i[2]
 
+    # building the constraints for each cage.
+    for i in cages:
+
+        total = i[0]  # extract the result of the operation.
+        surrounded_boxes = i[1]  # extract a list of tuples meant to reference the variables 
+                                 # involved in this cage/constraint.
+        opperator = i[2]  # extract the operator.
+
+        # we will put all the variables that we need to find the values for
+        # in one big list.
         needed_vars = []
+
+        # for the each tuple within the scope of the the current cage...
         for k in surrounded_boxes:
+
+            # ... we find the corresponding variable object with the same name
+            # as each specified tuple (i.e. intended to index the same object).
+            name = "Cell("+str(k[0])+","+str(k[1])+")"
             for y in allvars:
-                if y.name == "Cell("+str(k[0])+","+str(k[1])+")":
+                if y.name == name:
                     needed_vars.append(y)
 
-        
+        # create a new variable object to store this cage and its information.
         new_var = Variable("Cage_op("+str(total)+":"+str(opperator)+":"+str(needed_vars)+")", ['+','-','/','*','?'])
         csp.add_var(new_var)
         allvars.append(new_var)
+
+        # add this information (representing a cage) as a constraint object
         cons_vars = needed_vars[:]
         cons_vars.append(new_var)
-        cage_cons = Constraint("2",cons_vars)
+        cons_name = "Constraint for Variables" + str(needed_vars) + " with operator " + str(opperator)
+        cage_cons = Constraint(cons_name, cons_vars)
 
+        # finding all permutations for every variable in the 
+        # scope of the current cage/constraint.
+        #
+        # note: did not use permutations() method from itertools
+        # due to conflicts working with the data strucutre used
+        # to store the results of said method.
         num_in_cage = len(needed_vars)
         domain_sizer = allvars[0].domain_size()
         all_possible_combos = [[]]
-        for i in range(num_in_cage):
+
+        for i in range(num_in_cage):  # for each variable in the cage...
             temp = []
-            for j in all_possible_combos:
+
+            for j in all_possible_combos:  # we initialize each permutation within
+                                           # a seperate list.
+
                 for k in range(1,domain_sizer+1):
-                    s = j[:]
+                    s = j[:]  # we put all possible values in a different list
+                              # in every possible order...
                     s.append(k)
                     temp.append(s)
-            all_possible_combos = temp[:]
+
+            all_possible_combos = temp[:]  # ... and copy it over to our list
+                                           # holdihng every permutation in its own list.
         
-        #Turn combos into tuples so that they can be used. 
+        # now, turning each permutation into a tuple format such that it can
+        # be used and compared to when assessing the validity of assignments
+        # to variables.
         for i in range(len(all_possible_combos)):
             all_possible_combos[i].append(opperator)
             all_possible_combos[i] = tuple(all_possible_combos[i])
 
+        # the list "final" will store the satisfying tuples for 
+        # the values within the current cage and its variables.
         final = []
+
         if opperator == "+" or opperator == "*": 
-            print("Case 1")
             for combo in all_possible_combos:
                 if calculate_associative(opperator,combo,total):
                     final.append(combo)
         else:    
-            print("Case 2")
             for combo in all_possible_combos:
                 if calculate_non_associative(opperator,combo,total):
                     final.append(i)
-
-        print(final)
 
         cage_cons.add_satisfying_tuples(final)
         csp.add_constraint(cage_cons)

@@ -5,7 +5,8 @@
 # =============================
 # CISC 352 - W23
 # heuristics.py
-# desc:
+# desc: these heuristic functions take in a CSP and return one unassigned variable
+# based on specifications. 
 #
 
 
@@ -37,12 +38,15 @@ def ord_dh(csp):
         var_constraints = csp.get_cons_with_var(var)
         temp = 0
 
+        # count the number of constraints that var is involved with.
         for cons in var_constraints:
             if cons.get_n_unasgn() == 1:
                 pass
             else:
                 temp += 1
         
+        # keep track of only the variable with the highest number of
+        # constraints that it is involved with.
         if temp >= largest:
             largest = temp
             return_var = var
@@ -55,6 +59,8 @@ def ord_mrv(csp):
     min = all_vars[0].cur_domain_size()
     return_var = None
 
+    # iterate through each variable in our csp and find the lowest value
+    # able to be assigned among all their current domains.
     for var in all_vars:
         temp = var.cur_domain_size()
 
