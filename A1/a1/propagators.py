@@ -5,7 +5,8 @@
 # =============================
 # CISC 352 - W23
 # propagators.py
-# desc:
+# desc: implementations of two filtering methods, i.e. forward-checking
+# and generalized arc consistency. 
 #
 
 
@@ -93,56 +94,84 @@ def prop_FC(csp, newVar=None):
     '''Do forward checking. That is check constraints with
        only one uninstantiated variable. Remember to keep
        track of all pruned variable,value pairs and return '''
-    #IMPLEMENT
+    
+    # pruned will keep track of tuples consisting of a variable and the
+    # value pruned from its domain.
     pruned = []
+
     if not newVar:
         """for forward checking (where we only check constraints with one
-        remaining variable)
+        remaining variable)...
+        
         we look for unary constraints of the csp (constraints whose scope
         contains only one variable) and we forward_check these constraints."""
+
+        # for each constraint in the csp...
         for c in csp.get_all_cons():
+
+            # check to see if the current constraint contains exactly one
+            # unassigned value... 
             if c.get_n_unasgn() == 1:
+
+                # ... if so, we seek to find this unsassigned variable and can
+                # do this by going into the constraint's scope and checking 
+                # the assigned value of each variable.
+
                 for i in c.get_scope():
                     if var.get_assigned_value() == None:
                         un_ass_val = i
                         break
+                
+                # we then check the current domain of this unassigned variables
+                # to see if any of them need to be pruned according to the
+                # unary constraint.
+                    
                 for i in un_ass_val.cur_domain():
                     flag = c.check_var_val(un_ass_val,i)
-                    if not flag:
+                    
+                    # if there are no satisfying tuples involving this value,
+                    # we will prune it within the variable and constraint
+                    # it is involved in.
+                    if not flag:  
                        #PRUNE
                         un_ass_val.prune_value(i)
                         pruned.append((un_ass_val,i))
+
+                    # if the domain is simply empty, we have hit a dead-end
+                    # and need to backtrack.
                     if un_ass_val.cur_domain() == []:    
                         return False, pruned
+        
+        # indicates that the assignment is valid. 
         return True, pruned
     
     else:
         """for forward checking we forward check all constraints with V
          that have one unassigned variable left"""
-        #For each constraint. 
+        
+        # the FC algorithm is repeated, except in this case,
+        # instead of looping through all constraints within the csp,
+        # we loop through only constraints that newVar is involved with.
         for c in csp.get_cons_with_var(newVar):
-            #If it has exactly 1 unassigned variable. 
+
             if c.get_n_unasgn() == 1:
-                #Init Values
- 
-                #Get all variables within the constraint. 
                 vars = c.get_scope()
-                #For each var, if its unassigned, save for later.
+
                 for var in vars:
                     if var.get_assigned_value() == None:
                         un_ass_val = var
                         break
 
-                #Test each value out, If it ever returns false, prune it from the old tree. 
                 for i in un_ass_val.cur_domain():
                     flag = c.check_var_val(un_ass_val,i)
-                    if not flag:
-                       #PRUNE
+
+                    if not flag:  # prune if it cannot satisfy.
                         un_ass_val.prune_value(i)
                         pruned.append((un_ass_val,i))
                       
                 if un_ass_val.cur_domain() == []:    
                     return False, pruned
+                
         return True, pruned
 
 
@@ -150,7 +179,7 @@ def prop_GAC(csp, newVar=None):
     '''Do GAC propagation. If newVar is None we do initial GAC enforce
        processing all constraints. Otherwise we do GAC enforce with
        constraints containing newVar on GAC Queue'''
-    #IMPLEMENT
+
     pruned = []
 
     if not newVar:
@@ -160,34 +189,42 @@ def prop_GAC(csp, newVar=None):
         queue = csp.get_all_cons()[:]
         
         while len(queue) > 0:
-            # check the consistencies of the arcs starting from the tail of the queue.
-            # this is in the form [x_i, [X]]
+            # check the consistencies of the arcs within the queue...
             
-            # current is a constraint
+            # we will go through checking each constraint by accessing
+            # them individually from the front of the queue.
             current = queue.pop(0)
             vars_with_c = current.get_scope()
 
-            # build the arc
+            # we will then check each variable involved in the current
+            # constraint to see if its values are consistent with what
+            # they are allowed to be assigned as per the constraint...
             for var in vars_with_c:
 
+                # if there are no possible values that can be assigned
+                # to a variable, this is a dead-end and we need to
+                # backtrack (return False).
                 if var.cur_domain() == []:
                     return False, pruned
 
+                # else, we check that the values available in the current
+                # domain of var would not cause a conflict as per the
+                # constraint...
                 for i in var.cur_domain():
                     flag = current.check_var_val(var,i)
 
-                    if not flag:
-                        #PRUNE
+                    # in the case of a variable not satisfying...
+                    # we will prune it.
+                    if not flag: 
                         var.prune_value(i)
                         pruned.append((var,i))
 
-                        # if a value was removed from x_i's domain, we want to add all the neighbours 
-                        # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
-                        # the variables connected to x_k via (all of?) x_k's contraints.
+                        # if a value was removed from x_i's domain, we want 
+                        # to add all the constraints of the connected variables 
+                        # (i.e. connected via x_i due to the scope of the current 
+                        # constraint) to the queue to check them for consistency.
 
-                        # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
-                        # way of (x_k, X)
-                            
+                        # this is the propogation step, essentially.
                         temp = vars_with_c[:]
                         temp.remove(var)
 
@@ -199,17 +236,15 @@ def prop_GAC(csp, newVar=None):
     else:
         """for gac we initialize the GAC queue with all constraints containing V."""
 
+        # the gac algorithm is repeated the same as described above,
+        # however the queue is now initialized with just constraints 
+        # that newVar is involved in.
         queue = csp.get_cons_with_var(newVar)[:]
         
         while len(queue) > 0:
-            # check the consistencies of the arcs starting from the tail of the queue.
-            # this is in the form [x_i, [X]]
-            
-            # current is a constraint
             current = queue.pop(0)
             vars_with_c = current.get_scope()
 
-            # build the arc
             for var in vars_with_c:
 
                 if var.cur_domain() == []:
@@ -217,17 +252,10 @@ def prop_GAC(csp, newVar=None):
 
                 for i in var.cur_domain():
                     flag = current.check_var_val(var,i)
+
                     if not flag:
-                        #PRUNE
-                        var.prune_value(i)
+                        var.prune_value(i)  # prune if it cannot satisfy.
                         pruned.append((var,i))
-
-                        # if a value was removed from x_i's domain, we want to add all the neighbours 
-                        # (say, x_k) of x_i to the queue in the form of [x_k, [X_K]] where X_K are all
-                        # the variables connected to x_k via (all of?) x_k's contraints.
-
-                        # i.e. add the neighbours of newVar and their neighbours to the queue in the same 
-                        # way of (x_k, X)
                             
                         temp = vars_with_c[:]
                         temp.remove(var)
