@@ -356,6 +356,9 @@ def cagey_csp_model(cagey_grid):
         # the values within the current cage and its variables.
         final = []
 
+
+        #Check all combonations, and add the ones that pass
+        #To the final list. 
         if opperator == "+" or opperator == "*": 
             for combo in all_possible_combos:
                 if calculate_associative(opperator,combo,total):
@@ -365,12 +368,16 @@ def cagey_csp_model(cagey_grid):
                 if calculate_non_associative(opperator,combo,total):
                     final.append(i)
 
+        #Add final list to cage constraint and add the constraint to CSP.
         cage_cons.add_satisfying_tuples(final)
         csp.add_constraint(cage_cons)
+
 
     return csp, allvars
 
 def calculate_associative(opperator, tuples, goal):
+    #Calculate if the corresponding operation applied to tuples 
+    #rwesults in goal. 
     total = tuples[0]
 
     if opperator == "+":
@@ -386,6 +393,8 @@ def calculate_associative(opperator, tuples, goal):
     return False
 
 def calculate_non_associative(opperator, tuples, goal):
+    #Calculate if the corresponding operation applied to tuples 
+    #results in goal. 
     total = tuples[0]
     if opperator == "-":
         for i in tuples[1:-1]:
